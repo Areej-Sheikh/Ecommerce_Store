@@ -1,0 +1,37 @@
+.newCollections {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    margin-bottom: 100px;
+}
+
+.newCollections h1 {
+    color: #171717;
+    font-size: 50px;
+    font-weight: 600;
+}
+
+.newCollections hr {
+    width: 200px;
+    height: 6px;
+    border-radius: 10px;
+    background: #252525;
+}
+
+.collections {
+    width: 90%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Ensures equal column distribution */
+    margin-top: 50px;
+}
+.collections * {
+    box-sizing: border-box;
+}
+
+
+.collections img {
+    max-width: 100%; /* Ensures images never overflow */
+    height: auto; /* Maintains aspect ratio */
+}
