@@ -6,21 +6,24 @@
 
 .hero-left {
     display: flex;
-    flex:1;
+    flex: 1;
     flex-direction: column;
     justify-content: center;
     gap: 20px;
     padding-left: 180px;
     line-height: 1.1;
-    
+
 }
-#new{
+
+#new {
     color: #ff4141;
     margin-right: 73%;
 }
-#coll{
+
+#coll {
     margin-right: 29%;
 }
+
 .hero-left h2 {
     color: #090909;
     font-size: 26px;
@@ -42,9 +45,6 @@
     gap: 20px;
 }
 
-.hero-hand-icon img {
-    width: 80px;
-}
 
 .hero-latest-btn {
     display: flex;
@@ -60,11 +60,122 @@
     font-size: 22px;
     font-weight: 500;
 }
-.hero-right{
-    flex:1;
+
+.hero-right {
+    flex: 1;
     display: flex;
     align-items: center;
 }
-.hero-right img{
+
+.hero-right img {
     width: 90%;
+}
+
+@media(max-width:1280px) {
+    .hero-left {
+        padding-left: 100px;
+    }
+
+    .hero-left p {
+        font-size: 60px;
+    }
+
+    .hero-left h2 {
+        font-size: 22px;
+    }
+
+    .hero-latest-btn {
+        width: 250px;
+        font-size: 18px;
+        gap: 10px;
+        margin-top: 20px;
+
+    }
+
+    .hero-right img {
+        width: 100%;
+    }
+}
+
+@media(max-width:1024px) {
+    .hero-left {
+        padding-left: 80px;
+    }
+
+    .hero-left h2 {
+        font-size: 20px;
+    }
+
+    .hero-left p {
+        font-size: 50px;
+        margin-left: -70px;
+    }
+
+    #new {
+        margin-left: -10%;
+    }
+
+    .hero-latest-btn {
+        width: 220px;
+        font-size: 16px;
+        gap: 5px;
+        margin-top: 10px;
+    }
+
+    .hero-right img {
+        width: 75%;
+    }
+}
+
+@media(max-width:800px) {
+    .hero-left {
+        padding-left: 60px;
+    }
+
+    .hero-left h2 {
+        font-size: 18px;
+    }
+
+    .hero-left p {
+        font-size: 40px;
+        margin-left: -50px;
+    }
+
+    #new {
+        margin-left: -10%;
+    }
+
+    .hero-latest-btn {
+        width: 180px;
+        height: 50px;
+        font-size: 14px;
+        gap: 3px;
+        margin-top: 5px;
+
+    }
+}
+
+@media(max-width:500px) {
+    .hero {
+        flex-direction: column;
+    }
+
+    .hero-right {
+        display: none;
+    }
+
+    .hero-left h2 {
+        font-size: 18px;
+    }
+
+    .hero-left p {
+        font-size: 40px;
+        margin-left: 0;
+    }
+
+    .hero-latest-btn {
+        width: 200px;
+        height: 45px;
+        font-size: 14px;
+    }
 }
