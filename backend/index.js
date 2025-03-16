@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const path = require("path");
 const cors = require("cors");
-
+const { v4: uuidv4 } = require("uuid");
 // require.env
 require("dotenv").config();
 
@@ -35,6 +35,7 @@ const storage = multer.diskStorage({
 
 // Updated Product Schema
 const ProductSchema = new mongoose.Schema({
+  id: { type: String, unique: true, default: uuidv4 },
   name: { type: String, required: true },
   image: { type: String, required: true },
   category: { type: String, required: true },
@@ -48,6 +49,7 @@ const Product = mongoose.model("Product", ProductSchema);
 app.post("/addproduct", async function (req, res) {
   try {
     const product = new Product({
+      id: uuidv4(),
       name: req.body.name,
       image: req.body.image,
       category: req.body.category,
