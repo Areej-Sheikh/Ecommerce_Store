@@ -24,11 +24,13 @@ mongoose
 const storage = multer.diskStorage({
   destination: "./uploads/images/",
   filename: function (req, file, cb) {
-    return cb(
-      null`${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`
+    cb(
+      null,
+      `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`
     );
   },
 });
+
 //schema for creating products
 const Product = mongoose.model("Product", {
   id: {
@@ -123,12 +125,18 @@ app.get("/allproducts", async (req, res) => {
 const upload = multer({ storage: storage });
 app.use("/images", express.static("./uploads/images"));
 app.post("/upload", upload.single("product"), function (req, res) {
+  if (!req.file) {
+    return res
+      .status(400)
+      .json({ success: false, message: "No file uploaded." });
+  }
   res.json({
     success: true,
     image_url: `http://localhost:${port}/images/${req.file.filename}`,
   });
-  console.log(req.file);
+  console.log("File uploaded:", req.file);
 });
+
 app.get("/", function (req, res) {
   res.send("Hello World!");
 });
