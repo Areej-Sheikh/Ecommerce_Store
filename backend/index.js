@@ -15,7 +15,6 @@ app.use(cors());
 
 // Connect to MongoDB
 
-
 mongoose
   .connect(process.env.MONGO_DB_URL)
   .then(() => console.log("Connected to MongoDB!"))
@@ -33,7 +32,6 @@ const storage = multer.diskStorage({
 
 //schema for creating products
 
-// Updated Product Schema
 const ProductSchema = new mongoose.Schema({
   id: { type: String, unique: true, default: uuidv4 },
   name: { type: String, required: true },
@@ -116,8 +114,65 @@ app.post("/upload", upload.single("product"), function (req, res) {
   console.log("File uploaded:", req.file);
 });
 
-app.get("/", function (req, res) {
-  res.send("Hello World!");
+// Schema for user model
+const Users = mongoose.model("Users", {
+  username: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  cartData: { type: Object },
+  date: { type: Date, default: Date.now },
+});
+
+// registering the user
+app.post("/signup", async (req, res) => {
+  let check = await Users.findOne({ email: req.body.email });
+  if (check) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email already exists" });
+  }
+  let cart = {};
+  for (let i = 0; i < 300; i++) {
+    cart[i] = 0;
+  }
+  let user = new Users({
+    username: req.body.username,
+    email: req.body.email,
+    password: req.body.password,
+    cartData: cart,
+  });
+  await user.save();
+
+  const data = {
+    user: {
+      id: user.id,
+    },
+  };
+  const token = jwt.sign(data, process.env.JWT_SECRET || "default_secret");
+  res.json({ success: true, token: token });
+});
+
+// logging in the user
+
+app.post("/login", async (req, res) => {
+  let user = await Users.findOne({ email: req.body.email });
+  if (!user) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication failed" });
+  }
+  if (user.password !== req.body.password) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication failed" });
+  }
+  const data = {
+    user: {
+      id: user.id,
+    },
+  };
+  const token = jwt.sign(data, process.env.JWT_SECRET || "default_secret");
+  res.json({ success: true, token: token });
 });
 app.listen(port, (error) => {
   if (error) {
