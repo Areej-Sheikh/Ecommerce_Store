@@ -46,14 +46,14 @@ const ProductSchema = new mongoose.Schema({
 const Product = mongoose.model("Product", ProductSchema);
 app.post("/addproduct", async function (req, res) {
   try {
-    const product = new Product({
-      id: uuidv4(),
-      name: req.body.name,
-      image: req.body.image,
-      category: req.body.category,
-      new_price: req.body.new_price,
-      old_price: req.body.old_price,
-    });
+   const product = new Product({
+     id: uuidv4(),
+     name: req.body.name,
+     image: `http://localhost:3000/images/${req.body.image}`, // Store full URL
+     category: req.body.category,
+     new_price: req.body.new_price,
+     old_price: req.body.old_price,
+   });
 
     await product.save();
     console.log("Product saved:", product);
