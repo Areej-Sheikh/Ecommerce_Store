@@ -11,7 +11,9 @@ const Navbar = () => {
   const { getTotalCartItems } = useContext(ShopContext);
   const menuRef = useRef();
 
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("auth-token"));
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("auth-token")
+  );
 
   const dropdownToggle = (e) => {
     menuRef.current.classList.toggle("nav-menu-visible");
@@ -19,15 +21,15 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-   console.log("Logging out...");
-   localStorage.removeItem("auth-token"); 
-   setIsAuthenticated(false);
-   window.location.replace("/");
+    console.log("Logging out...");
+    localStorage.removeItem("auth-token");
+    setIsAuthenticated(false);
+    window.location.replace("/");
   };
 
   useEffect(() => {
-     console.log("Checking auth token:", localStorage.getItem("auth-token"));
-     setIsAuthenticated(!!localStorage.getItem("auth-token"));
+    console.log("Checking auth token:", localStorage.getItem("auth-token"));
+    setIsAuthenticated(!!localStorage.getItem("auth-token"));
   }, []);
 
   return (
@@ -36,7 +38,12 @@ const Navbar = () => {
         <img src={logo} alt="" />
         <p>FOREVER 21</p>
       </div>
-      <img className="nav-dropdown" onClick={dropdownToggle} src={nav_dropdown} alt="" />
+      <img
+        className="nav-dropdown"
+        onClick={dropdownToggle}
+        src={nav_dropdown}
+        alt=""
+      />
       <ul ref={menuRef} className="nav-menu">
         <li onClick={() => setMenu("shop")}>
           <Link style={{ textDecoration: "none", color: "black" }} to="/">
@@ -56,11 +63,11 @@ const Navbar = () => {
           </Link>
           {menu === "womens" && <hr />}
         </li>
-        <li onClick={() => setMenu("kids")}>
-          <Link style={{ textDecoration: "none", color: "black" }} to="/kids">
-            Kids
+        <li onClick={() => setMenu("kid")}>
+          <Link style={{ textDecoration: "none", color: "black" }} to="/kid">
+            kid
           </Link>
-          {menu === "kids" && <hr />}
+          {menu === "kid" && <hr />}
         </li>
       </ul>
       <div className="nav-login-cart">

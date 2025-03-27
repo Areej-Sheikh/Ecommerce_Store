@@ -12,6 +12,7 @@ require("dotenv").config();
 
 app.use(express.json());
 app.use(cors());
+app.use("/images", express.static("uploads/images"));
 
 // Connect to MongoDB
 
@@ -46,17 +47,18 @@ const ProductSchema = new mongoose.Schema({
 const Product = mongoose.model("Product", ProductSchema);
 app.post("/addproduct", async function (req, res) {
   try {
-   const product = new Product({
-     id: uuidv4(),
-     name: req.body.name,
-     image: `http://localhost:3000/images/${req.body.image}`, // Store full URL
-     category: req.body.category,
-     new_price: req.body.new_price,
-     old_price: req.body.old_price,
-   });
+    const product = new Product({
+      id: uuidv4(),
+      name: req.body.name,
+      image: req.body.image, // Store full URL
+      category: req.body.category,
+      new_price: req.body.new_price,
+      old_price: req.body.old_price,
+    });
 
     await product.save();
     console.log("Product saved:", product);
+    console.log("Received product data:", req.body);
     res.json({
       success: true,
       message: "Product saved successfully",
@@ -174,6 +176,51 @@ app.post("/login", async (req, res) => {
   const token = jwt.sign(data, process.env.JWT_SECRET || "default_secret");
   res.json({ success: true, token: token });
 });
+app.get("/newcollections", async (req, res) => {
+  let products = await Product.find({});
+  let newCollection = products.slice(1).slice(-8);
+  console.log("New collection Fetched");
+  res.send(newCollection);
+});
+app.get("/popularinwomen", async (req, res) => {
+  let products = await Product.find({ category: "women" });
+  let popular_in_women = products.slice(0, 4);
+  console.log("Popular products in women fetched");
+  res.send(popular_in_women);
+});
+const fetchUser = async (req, res, next) => {
+  const token = req.header("auth-token");
+  if (!token) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Please Login using valid email id" });
+  } else {
+    try {
+      const data = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "default_secret"
+      );
+      req.user = data.user;
+      next();
+    } catch (error) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Please Login using valid email id" });
+    }
+  }
+};
+app.post("/addtocart", fetchUser, async (req, res) => {
+  let userData = await Users.findOne({ _id: req.user.id });
+  userData.cartData[req.body.itemId] += 1;
+  await Users.findOneAndUpdate(
+    { _id: req.user.id },
+    { cartData: userData.cartData }
+  );
+  res
+    .send("Added to cart")
+
+});
+
 app.listen(port, (error) => {
   if (error) {
     console.log("Error in connecting to database", error);

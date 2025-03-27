@@ -9,14 +9,24 @@ import RelatedProducts from "../Components/RelatedProducts/RelatedProducts";
 const Product = () => {
   const { all_product } = useContext(ShopContext);
   const { productId } = useParams();
-  const product = all_product.find((e) => e.id === Number(productId));
+
+  // Wait until products are loaded
+  if (!all_product || all_product.length === 0) {
+    return <p>Loading products...</p>;
+  }
+
+  const product = all_product.find((e) => e.id === productId);
+
+  if (!product) {
+    return <p>Product not found.</p>;
+  }
 
   return (
     <div>
       <Breadcrumbs product={product} />
       <ProductDisplay product={product} />
-      <DescriptionBox/>
-      <RelatedProducts/>
+      <DescriptionBox />
+      <RelatedProducts />
     </div>
   );
 };

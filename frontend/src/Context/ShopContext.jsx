@@ -6,23 +6,42 @@ const ShopContextProvider = ({ children }) => {
   const [all_product, setAllProduct] = useState([]);
   const [cartItems, setCartItems] = useState({});
 
-
- useEffect(() => {
-   fetch("http://localhost:3000/allproducts")
-     .then((response) => response.json())
-     .then((data) => {
-       console.log("Fetched Categories:", [
-         ...new Set(data.products.map((p) => p.category)),
-       ]);
-       setAllProduct(data.products);
-     })
-     .catch((error) => console.error("Error fetching products:", error));
- }, []);
-
+  useEffect(() => {
+    fetch("http://localhost:3000/allproducts")
+      .then((response) => response.json())
+      .then((data) => {
+        setAllProduct(data.products);
+      })
+      .catch((error) => console.error("Error fetching products:", error));
+  }, []);
 
   const addToCart = (itemId) => {
     setCartItems((prev) => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
+
+    if (localStorage.getItem("auth-token")) {
+      fetch("http://localhost:3000/addtocart", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "auth-token": localStorage.getItem("auth-token"),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ itemId: itemId }),
+      })
+        .then((response) => {
+          // Check if the response has a JSON content type
+          const contentType = response.headers.get("Content-Type");
+          if (contentType && contentType.includes("application/json")) {
+            return response.json();
+          }
+          // Otherwise, return the text response
+          return response.text();
+        })
+        .then((data) => console.log(data))
+        .catch((error) => console.error("Error adding to cart:", error));
+    }
   };
+
 
   const removeFromCart = (itemId) => {
     setCartItems((prev) => ({
@@ -38,7 +57,6 @@ const ShopContextProvider = ({ children }) => {
     }, 0);
   };
 
-
   const getTotalCartItems = () => {
     return Object.values(cartItems).reduce(
       (total, quantity) => total + quantity,
@@ -52,7 +70,7 @@ const ShopContextProvider = ({ children }) => {
     addToCart,
     removeFromCart,
     getTotalCartAmount,
-    getTotalCartItems, 
+    getTotalCartItems,
   };
 
   return (

@@ -10,6 +10,7 @@ const ListProduct = () => {
       const resp = await fetch("http://localhost:3000/allproducts");
       const data = await resp.json();
       setAllProducts(Array.isArray(data.products) ? data.products : []);
+      
     } catch (error) {
       console.error("Error fetching data:", error);
       setAllProducts([]);

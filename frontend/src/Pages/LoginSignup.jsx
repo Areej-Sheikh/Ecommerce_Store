@@ -34,10 +34,8 @@ const LoginSignup = () => {
       });
 
       const responseData = await response.json();
-      console.log("API Response:", responseData); // 🔍 Debugging log
 
       if (response.ok && responseData.token) {
-        console.log("Storing authToken:", responseData.token); // 🔍 Debugging log
         localStorage.setItem("auth-token", responseData.token);
         alert(
           state === "Login" ? "Login Successful!" : "Registration Successful!"

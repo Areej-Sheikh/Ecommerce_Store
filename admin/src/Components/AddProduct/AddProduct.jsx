@@ -17,7 +17,7 @@ const AddProduct = () => {
 
   const [productDetails, setproductDetails] = useState({
     name: "",
-    category: "",
+    category: "women",
     image: "",
     new_price: "",
     old_price: "",
@@ -26,7 +26,6 @@ const AddProduct = () => {
     setproductDetails({ ...productDetails, [e.target.name]: e.target.value });
   };
   const Add_product = async () => {
-    console.log(productDetails);
     let responseData;
     let product = productDetails;
     let formData = new FormData();
@@ -42,7 +41,6 @@ const AddProduct = () => {
       .then((data) => (responseData = data));
     if (responseData.success) {
       product.image = responseData.image_url;
-      console.log(product);
       await fetch("http://localhost:3000/addproduct", {
         method: "POST",
         headers: {
@@ -56,6 +54,23 @@ const AddProduct = () => {
           if (data.success) alert("Product added successfully");
           else alert("Product not added successfully");
         });
+      if (responseData.success) {
+        product.image = responseData.image_url; // Backend sends correct URL
+
+        await fetch("http://localhost:3000/addproduct", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(product),
+        })
+          .then((resp) => resp.json())
+          .then((data) => {
+            if (data.success) alert("Product added successfully");
+            else alert("Product not added successfully");
+          });
+      }
     }
   };
   return (
@@ -102,7 +117,7 @@ const AddProduct = () => {
         >
           <option value="women">Women</option>
           <option value="men">Men</option>
-          <option value="kids">Kids</option>
+          <option value="kid">kid</option>
         </select>
       </div>
       <div className="addproduct-itemfield">
