@@ -8,7 +8,7 @@ const ListProduct = () => {
   // Fetch all products from the backend
   const fetchInfo = async () => {
     try {
-      const resp = await fetch("http://localhost:3000/allproducts");
+      const resp = await fetch(`${import.meta.env.VITE_API_URL}allproducts`);
       const data = await resp.json();
       setAllProducts(Array.isArray(data.products) ? data.products : []);
     } catch (error) {
@@ -24,14 +24,17 @@ const ListProduct = () => {
   // Remove a product by ID
   const remove_product = async (id) => {
     try {
-      const response = await fetch("http://localhost:3000/removeproduct", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}removeproduct`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ id }),
+        }
+      );
 
       const result = await response.json();
       if (result.success) {

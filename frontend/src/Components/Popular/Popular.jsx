@@ -3,15 +3,15 @@ import Item from "../Item/Item"
 import { useEffect, useState } from 'react'
 const Popular = () => {
   const [popularProducts, setPopularProducts] = useState([])
-  useEffect(()=>{
-    fetch('http://localhost:3000/popularinwomen')
-     .then(response=>response.json())
-     .then(data=>{
-         setPopularProducts(data)
+ useEffect(() => {
+   fetch(`${import.meta.env.VITE_API_URL}popularinwomen`)
+     .then((response) => response.json())
+     .then((data) => {
+       setPopularProducts(data);
      })
-     .catch(error=>console.log(error))
- 
-  },[])
+     .catch((error) => console.log(error));
+ }, []);
+
   return (
     <div className="popular" >
         <h1>POPULAR IN WOMEN</h1>

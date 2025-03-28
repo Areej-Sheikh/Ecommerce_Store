@@ -5,14 +5,15 @@ import { useEffect, useState } from "react";
 const NewCollections = () => {
   const [newcollections, setNewCollections] = useState([]);
 
-  useEffect(() => {
-    fetch("http://localhost:3000/newcollections")
-      .then((response) => response.json())
-      .then((data) => {
-        setNewCollections(Array.isArray(data) ? data : []);
-      })
-      .catch((error) => console.error("Error fetching data:", error));
-  }, []);
+ useEffect(() => {
+fetch(`${import.meta.env.VITE_API_URL}newcollections`)
+  .then((response) => response.json())
+  .then((data) => {
+    setNewCollections(Array.isArray(data) ? data : []);
+  })
+  .catch((error) => console.error("Error fetching data:", error));
+ }, []);
+
 
   return (
     <div className="newCollections">
