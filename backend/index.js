@@ -188,6 +188,9 @@ app.post("/addtocart", fetchUser, async (req, res) => {
     .send("Added to cart")
 
 });
+app.get("/", (req, res) => {
+  res.send("Welcome to the Home Page!");
+});
 
 app.listen(process.env.PORT ||5000, (error) => {
   if (error) {
