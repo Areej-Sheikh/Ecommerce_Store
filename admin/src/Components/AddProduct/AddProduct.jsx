@@ -3,97 +3,76 @@ import upload_area from "../../assets/upload_area.svg";
 import { useState } from "react";
 
 const AddProduct = () => {
-  const [image, setImage] = useState(null);
-  const [productDetails, setProductDetails] = useState({
-    name: "",
-    category: "women",
-    image: "",
-    new_price: "",
-    old_price: "",
-  });
-
-  // Handle file input change
+  const [image, setimage] = useState(false);
   const imageHandler = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(file);
-      setProductDetails((prevDetails) => ({
+      setimage(file);
+      setproductDetails((prevDetails) => ({
         ...prevDetails,
         image: URL.createObjectURL(file),
       }));
     }
   };
 
-  // Handle input changes for product details
+  const [productDetails, setproductDetails] = useState({
+    name: "",
+    category: "women",
+    image: "",
+    new_price: "",
+    old_price: "",
+  });
   const changeHandler = (e) => {
-    setProductDetails({ ...productDetails, [e.target.name]: e.target.value });
+    setproductDetails({ ...productDetails, [e.target.name]: e.target.value });
   };
-
-  // Function to add product
-  const addProduct = async () => {
-    if (!image) {
-      alert("Please select an image");
-      return;
-    }
-
+  const Add_product = async () => {
     let responseData;
+    let product = productDetails;
     let formData = new FormData();
     formData.append("product", image);
-
-    // Upload image
-    try {
-      const response = await fetch("http://localhost:3000/upload", {
+    await fetch("http://localhost:3000/upload", {
+      method: "POST",
+      body: formData,
+      headers: {
+        Accept: "application/json",
+      },
+    })
+      .then((resp) => resp.json())
+      .then((data) => (responseData = data));
+    if (responseData.success) {
+      product.image = responseData.image_url;
+      await fetch("http://localhost:3000/addproduct", {
         method: "POST",
-        body: formData,
         headers: {
           Accept: "application/json",
+          "Content-Type": "application/json",
         },
-      });
-      responseData = await response.json();
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Failed to upload image");
-      return;
-    }
+        body: JSON.stringify(product),
+      })
+        .then((resp) => resp.json())
+        .then((data) => {
+          if (data.success) alert("Product added successfully");
+          else alert("Product not added successfully");
+        });
+      if (responseData.success) {
+        product.image = responseData.image_url; // Backend sends correct URL
 
-    if (responseData.success) {
-      const product = { ...productDetails, image: responseData.image_url };
-
-      // Send product details to backend
-      try {
-        const productResponse = await fetch(
-          "http://localhost:3000/addproduct",
-          {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(product),
-          }
-        );
-        const productData = await productResponse.json();
-
-        if (productData.success) {
-          alert("Product added successfully");
-          setProductDetails({
-            name: "",
-            category: "women",
-            image: "",
-            new_price: "",
-            old_price: "",
+        await fetch("http://localhost:3000/addproduct", {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(product),
+        })
+          .then((resp) => resp.json())
+          .then((data) => {
+            if (data.success) alert("Product added successfully");
+            else alert("Product not added successfully");
           });
-          setImage(null);
-        } else {
-          alert("Product not added successfully");
-        }
-      } catch (error) {
-        console.error("Error adding product:", error);
-        alert("Failed to add product");
       }
     }
   };
-
   return (
     <div className="add-product">
       <div className="addproduct-itemfield">
@@ -138,7 +117,7 @@ const AddProduct = () => {
         >
           <option value="women">Women</option>
           <option value="men">Men</option>
-          <option value="kid">Kids</option>
+          <option value="kid">kid</option>
         </select>
       </div>
       <div className="addproduct-itemfield">
@@ -157,7 +136,12 @@ const AddProduct = () => {
           hidden
         />
       </div>
-      <button onClick={addProduct} className="addproduct-button">
+      <button
+        onClick={() => {
+          Add_product();
+        }}
+        className="addproduct-button"
+      >
         ADD
       </button>
     </div>

@@ -125,70 +125,74 @@ app.post("/signup", async (req, res) => {
 
 // User Login
 app.post("/login", async (req, res) => {
-  const user = await Users.findOne({ email: req.body.email });
-  if (!user || user.password !== req.body.password) {
+  let user = await Users.findOne({ email: req.body.email });
+  if (!user) {
     return res
       .status(401)
       .json({ success: false, message: "Authentication failed" });
   }
-  const token = jwt.sign(
-    { user: { id: user.id } },
-    process.env.JWT_SECRET || "default_secret"
-  );
-  res.json({ success: true, token });
+  if (user.password !== req.body.password) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Authentication failed" });
+  }
+  const data = {
+    user: {
+      id: user.id,
+    },
+  };
+  const token = jwt.sign(data, process.env.JWT_SECRET || "default_secret");
+  res.json({ success: true, token: token });
 });
-
-// Middleware to authenticate user
+app.get("/newcollections", async (req, res) => {
+  let products = await Product.find({});
+  let newCollection = products.slice(1).slice(-8);
+  console.log("New collection Fetched");
+  res.send(newCollection);
+});
+app.get("/popularinwomen", async (req, res) => {
+  let products = await Product.find({ category: "women" });
+  let popular_in_women = products.slice(0, 4);
+  console.log("Popular products in women fetched");
+  res.send(popular_in_women);
+});
 const fetchUser = async (req, res, next) => {
   const token = req.header("auth-token");
-  if (!token)
-    return res.status(401).json({ success: false, message: "Please login" });
-  try {
-    req.user = jwt.verify(
-      token,
-      process.env.JWT_SECRET || "default_secret"
-    ).user;
-    next();
-  } catch (error) {
-    res.status(401).json({ success: false, message: "Invalid token" });
+  if (!token) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Please Login using valid email id" });
+  } else {
+    try {
+      const data = jwt.verify(
+        token,
+        process.env.JWT_SECRET || "default_secret"
+      );
+      req.user = data.user;
+      next();
+    } catch (error) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Please Login using valid email id" });
+    }
   }
 };
-
-// Add item to cart
 app.post("/addtocart", fetchUser, async (req, res) => {
-  const user = await Users.findById(req.user.id);
-  user.cartData[req.body.itemId] = (user.cartData[req.body.itemId] || 0) + 1;
-  await user.save();
-  res.send("Added to cart");
+  let userData = await Users.findOne({ _id: req.user.id });
+  userData.cartData[req.body.itemId] += 1;
+  await Users.findOneAndUpdate(
+    { _id: req.user.id },
+    { cartData: userData.cartData }
+  );
+  res
+    .send("Added to cart")
+
 });
 
-// Remove item from cart
-app.post("/removefromcart", fetchUser, async (req, res) => {
-  const user = await Users.findById(req.user.id);
-  if (user.cartData[req.body.itemId] > 0) user.cartData[req.body.itemId] -= 1;
-  await user.save();
-  res.send("Removed from cart");
+app.listen(port, (error) => {
+  if (error) {
+    console.log("Error in connecting to database", error);
+  } else {
+    console.log("Server is running on port : ", port);
+  }
 });
-
-// Get user cart data
-app.post("/getcart", fetchUser, async (req, res) => {
-  const user = await Users.findById(req.user.id);
-  res.json(user.cartData);
-});
-
-// Get new collections (latest 8 products)
-app.get("/newcollections", async (req, res) => {
-  const products = await Product.find({}).sort({ date: -1 }).limit(8);
-  res.json(products);
-});
-
-// Get popular products in women's category
-app.get("/popularinwomen", async (req, res) => {
-  const products = await Product.find({ category: "women" }).limit(4);
-  res.json(products);
-});
-
-// Start server
-app.listen(process.env.PORT, () =>
-  console.log(`Server running on port: ${port}`)
-);
