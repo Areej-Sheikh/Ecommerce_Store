@@ -5,12 +5,12 @@ import cross_icon from "../../assets/cross_icon.png";
 const ListProduct = () => {
   const [allproducts, setAllProducts] = useState([]);
 
+  // Fetch all products from the backend
   const fetchInfo = async () => {
     try {
       const resp = await fetch("http://localhost:3000/allproducts");
       const data = await resp.json();
       setAllProducts(Array.isArray(data.products) ? data.products : []);
-      
     } catch (error) {
       console.error("Error fetching data:", error);
       setAllProducts([]);
@@ -21,16 +21,30 @@ const ListProduct = () => {
     fetchInfo();
   }, []);
 
+  // Remove a product by ID
   const remove_product = async (id) => {
-    await fetch("http://localhost:3000/removeproduct", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ id: id }),
-    });
-    await fetchInfo();
+    try {
+      const response = await fetch("http://localhost:3000/removeproduct", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Update state by filtering out the deleted product
+        setAllProducts((prevProducts) =>
+          prevProducts.filter((product) => product.id !== id)
+        );
+      } else {
+        console.error("Failed to delete product:", result.message);
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
   };
 
   return (
@@ -48,11 +62,10 @@ const ListProduct = () => {
         <hr />
         {allproducts.map((product) => (
           <div key={product.id}>
-            {" "}
             <div className="listproduct-format-main listproduct-format">
               <img
                 src={product.image}
-                alt=""
+                alt={product.name}
                 className="listproduct-product-icon"
               />
               <p>{product.name}</p>
@@ -63,7 +76,7 @@ const ListProduct = () => {
                 className="listproduct-remove-icon"
                 src={cross_icon}
                 onClick={() => remove_product(product.id)}
-                alt=""
+                alt="Remove"
               />
             </div>
             <hr />
