@@ -189,10 +189,10 @@ app.post("/addtocart", fetchUser, async (req, res) => {
 
 });
 
-app.listen(port, (error) => {
+app.listen(process.env.PORT, (error) => {
   if (error) {
     console.log("Error in connecting to database", error);
   } else {
-    console.log("Server is running on port : ", port);
+    console.log("Server is running on port : ", process.env.PORT);
   }
 });
