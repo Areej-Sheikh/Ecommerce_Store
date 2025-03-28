@@ -6,56 +6,122 @@ const ShopContextProvider = ({ children }) => {
   const [all_product, setAllProduct] = useState([]);
   const [cartItems, setCartItems] = useState({});
 
-  useEffect(() => {
-    fetch("http://localhost:3000/allproducts")
-      .then((response) => response.json())
-      .then((data) => {
-        setAllProduct(data.products);
-      })
-      .catch((error) => console.error("Error fetching products:", error));
-  }, []);
+useEffect(() => {
+  fetch("http://localhost:3000/allproducts")
+    .then((response) => response.json())
+    .then((data) => {
+      setAllProduct(data.products);
 
-  const addToCart = (itemId) => {
-    setCartItems((prev) => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
+      const token = localStorage.getItem("auth-token");
 
-    if (localStorage.getItem("auth-token")) {
-      fetch("http://localhost:3000/addtocart", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "auth-token": localStorage.getItem("auth-token"),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ itemId: itemId }),
-      })
-        .then((response) => {
-          // Check if the response has a JSON content type
-          const contentType = response.headers.get("Content-Type");
-          if (contentType && contentType.includes("application/json")) {
-            return response.json();
-          }
-          // Otherwise, return the text response
-          return response.text();
+      console.log("Auth Token:", token); // ✅ Check if the token exists before making the request
+
+      if (token) {
+        fetch("http://localhost:3000/getcart", {
+          method: "GET", // ✅ Correct method
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Send token correctly
+            "Content-Type": "application/json",
+          },
         })
-        .then((data) => console.log(data))
-        .catch((error) => console.error("Error adding to cart:", error));
-    }
-  };
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Cart Data Response:", data); // ✅ Log response to check if it's correct
+
+            if (data.success) {
+              setCartItems(data.cartData);
+            } else {
+              console.error("Error fetching cart:", data.message);
+            }
+          })
+          .catch((error) => console.error("Error fetching cart data:", error));
+      } else {
+        console.error("No auth token found in local storage"); // ✅ If token is missing, this will show
+      }
+    })
+    .catch((error) => console.error("Error fetching products:", error));
+}, []);
 
 
-  const removeFromCart = (itemId) => {
-    setCartItems((prev) => ({
-      ...prev,
-      [itemId]: Math.max((prev[itemId] || 0) - 1, 0),
-    }));
-  };
+const addToCart = (itemId) => {
+  const authToken = localStorage.getItem("auth-token");
 
-  const getTotalCartAmount = () => {
-    return Object.entries(cartItems).reduce((total, [itemId, quantity]) => {
-      const product = all_product.find((p) => p.id === Number(itemId));
-      return product ? total + product.new_price * quantity : total;
-    }, 0);
-  };
+  if (!authToken) {
+    console.error("No auth token found! User might be logged out.");
+    return;
+  }
+
+  console.log("Auth Token:", authToken); // Debugging log
+
+  fetch("http://localhost:3000/addtocart", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "auth-token": authToken, // Ensuring token is included
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ itemId: itemId }),
+  })
+    .then((response) => {
+      console.log("Raw response:", response);
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Response data:", data);
+      if (data.success) {
+        setCartItems(data.cartData); // Ensure backend sends updated cart data
+      } else {
+        console.error("Failed to update cart:", data.message);
+      }
+    })
+    .catch((error) => console.error("Error adding to cart:", error));
+};
+
+const removeFromCart = (itemId) => {
+  const authToken = localStorage.getItem("auth-token");
+
+  if (!authToken) {
+    console.error("No auth token found! User might be logged out.");
+    return;
+  }
+
+  console.log("Auth Token:", authToken);
+  console.log("Item ID:", itemId);
+
+  fetch("http://localhost:3000/removefromcart", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${authToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ itemId }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Remove Response Data:", data);
+
+      if (data.success) {
+        setCartItems(data.cartData); // ✅ Sync with backend data
+      } else {
+        console.error("Failed to remove item:", data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error removing item:", error);
+    });
+};
+
+
+
+const getTotalCartAmount = () => {
+  return Object.entries(cartItems).reduce((total, [itemId, quantity]) => {
+    const product = all_product.find((p) => String(p.id) === String(itemId)); // ✅ Ensure both are strings
+    return product ? total + product.new_price * quantity : total;
+  }, 0);
+};
+
 
   const getTotalCartItems = () => {
     return Object.values(cartItems).reduce(

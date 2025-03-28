@@ -41,7 +41,7 @@ const AddProduct = () => {
       .then((data) => (responseData = data));
     if (responseData.success) {
       product.image = responseData.image_url;
-      await fetch("http://localhost:3000/addproduct", {
+      await fetch("http://localhost:3000/addproducts", {
         method: "POST",
         headers: {
           Accept: "application/json",
@@ -57,7 +57,7 @@ const AddProduct = () => {
       if (responseData.success) {
         product.image = responseData.image_url; // Backend sends correct URL
 
-        await fetch("http://localhost:3000/addproduct", {
+        await fetch("http://localhost:3000/addproducts", {
           method: "POST",
           headers: {
             Accept: "application/json",

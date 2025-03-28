@@ -158,24 +158,22 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   let user = await Users.findOne({ email: req.body.email });
-  if (!user) {
+
+  if (!user || user.password !== req.body.password) {
     return res
       .status(401)
       .json({ success: false, message: "Authentication failed" });
   }
-  if (user.password !== req.body.password) {
-    return res
-      .status(401)
-      .json({ success: false, message: "Authentication failed" });
-  }
-  const data = {
-    user: {
-      id: user.id,
-    },
-  };
-  const token = jwt.sign(data, process.env.JWT_SECRET || "default_secret");
-  res.json({ success: true, token: token });
+
+  const token = jwt.sign(
+    { user: { id: user.id } },
+    process.env.JWT_SECRET || "default_secret"
+  );
+
+  res.json({ success: true, token: token, cartData: user.cartData || {} });
 });
+
+
 app.get("/newcollections", async (req, res) => {
   let products = await Product.find({});
   let newCollection = products.slice(1).slice(-8);
@@ -188,38 +186,145 @@ app.get("/popularinwomen", async (req, res) => {
   console.log("Popular products in women fetched");
   res.send(popular_in_women);
 });
-const fetchUser = async (req, res, next) => {
-  const token = req.header("auth-token");
-  if (!token) {
+const fetchUser = (req, res, next) => {
+  const authHeader = req.header("Authorization");
+
+  if (!authHeader) {
     return res
       .status(401)
-      .json({ success: false, message: "Please Login using valid email id" });
-  } else {
-    try {
-      const data = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "default_secret"
-      );
-      req.user = data.user;
-      next();
-    } catch (error) {
+      .json({ success: false, message: "No token provided" });
+  }
+
+  try {
+    // Extract the token after "Bearer "
+    const token = authHeader.split(" ")[1];
+    console.log("Extracted token:", token); // Debug log to check the token value
+
+    if (!token) {
       return res
         .status(401)
-        .json({ success: false, message: "Please Login using valid email id" });
+        .json({ success: false, message: "Invalid token format" });
     }
+
+    const verified = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "default_secret"
+    );
+    console.log("Verified Token:", verified); // Log the decoded token for debugging
+    req.user = verified.user;
+    next();
+  } catch (error) {
+    console.error("Token verification error:", error); // Log detailed error
+    return res.status(401).json({ success: false, message: "Invalid token" });
   }
 };
-app.post("/addtocart", fetchUser, async (req, res) => {
-  let userData = await Users.findOne({ _id: req.user.id });
-  userData.cartData[req.body.itemId] += 1;
-  await Users.findOneAndUpdate(
-    { _id: req.user.id },
-    { cartData: userData.cartData }
-  );
-  res
-    .send("Added to cart")
 
+
+
+app.post("/addtocart", fetchUser, async (req, res) => {
+  try {
+    let userData = await Users.findOne({ _id: req.user.id });
+
+    if (!userData) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    let cart = userData.cartData || {}; // Ensure cart is an object
+
+    // If item is already in cart, increase count; otherwise, add it
+    cart[req.body.itemId] = (cart[req.body.itemId] || 0) + 1;
+
+    // Save updated cart back to database
+    await Users.updateOne({ _id: req.user.id }, { cartData: cart });
+
+    res.json({ success: true, cartData: cart });
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    res.status(500).json({ success: false, message: "Error updating cart" });
+  }
 });
+
+
+app.get("/getcart", fetchUser, async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found in token" });
+    }
+
+    const userId = req.user.id;
+    const user = await Users.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      cartData: user.cartData || {}, // ✅ Ensure cartData is always an object
+    });
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+app.post("/removefromcart", fetchUser, async (req, res) => {
+  const { itemId } = req.body;
+
+  try {
+    if (!req.user || !req.user.id) {
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found in token" });
+    }
+
+    const userId = req.user.id;
+    const user = await Users.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    if (!user.cartData || typeof user.cartData !== "object") {
+      user.cartData = {}; // Ensure cartData is always an object
+    }
+
+    if (user.cartData.hasOwnProperty(itemId)) {
+      delete user.cartData[itemId]; // Remove item from cart
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Item not found in cart" });
+    }
+
+    await user.markModified("cartData"); // ✅ Mark cartData as modified
+    await user.save(); // ✅ Ensure it saves to MongoDB
+
+    console.log("Updated Cart Data:", user.cartData); // Debugging log
+
+    res.json({
+      success: true,
+      message: "Item removed from cart successfully",
+      cartData: { ...user.cartData }, // Send updated cart data
+    });
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+
+
+
 
 app.listen(port, (error) => {
   if (error) {
