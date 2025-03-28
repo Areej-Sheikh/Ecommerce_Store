@@ -8,12 +8,17 @@ require("dotenv").config();
 
 const app = express();
 
-
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 // app.use(cors());
-app.use(cors({ origin: process.env.FRONTEND_URL, credentials: true }));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
 app.use("/images", express.static("uploads/images"));
 
 // Connect to MongoDB
@@ -185,15 +190,13 @@ app.post("/addtocart", fetchUser, async (req, res) => {
     { _id: req.user.id },
     { cartData: userData.cartData }
   );
-  res
-    .send("Added to cart")
-
+  res.send("Added to cart");
 });
 app.get("/", (req, res) => {
   res.send("Welcome to the Home Page!");
 });
 
-app.listen(process.env.PORT ||5000, (error) => {
+app.listen(process.env.PORT || 5000, (error) => {
   if (error) {
     console.log("Error in connecting to database", error);
   } else {
